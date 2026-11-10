@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Centro de Datos · Realidad Aumentada</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}
+    .top{position:fixed;z-index:20;top:10px;left:10px;right:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .top a,.top button{background:#071b2aeb;color:white;border:1px solid #00d9ff;padding:10px 13px;border-radius:8px;text-decoration:none;font-weight:bold}
+    .note{position:fixed;z-index:20;bottom:12px;left:12px;right:12px;max-width:540px;background:#071b2ae8;color:white;padding:10px 13px;border-radius:9px;font-size:12px;line-height:1.45}
+    #arStatus{color:#83f7dc}
+  </style>
+</head>
+<body>
+  <nav class="top"><a href="index.html">← Volver a VR</a><button id="toggleRouter">Mostrar / ocultar router</button></nav>
+  <div class="note"><strong>Realidad aumentada · MindAR</strong><br>
+    Apunta la cámara a la imagen objetivo compilada. <span id="arStatus">Esperando cámara y marcador…</span><br>
+    Esta experiencia es una simulación educativa; no representa mediciones reales.
+  </div>
+
+  <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
+    color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true"
+    vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="image-target" mindar-image-target="targetIndex: 0">
+      <!-- Modelo procedural visible incluso si no se han descargado los GLB -->
+      <a-entity id="server-stack" position="0 -.12 .05">
+        <a-box position="0 0 0" width=".62" height=".72" depth=".28" color="#17232f"></a-box>
+        <a-box position="0 .24 .15" width=".56" height=".18" depth=".015" color="#263849"></a-box>
+        <a-box position="0 0 .15" width=".56" height=".18" depth=".015" color="#263849"></a-box>
+        <a-box position="0 -.24 .15" width=".56" height=".18" depth=".015" color="#263849"></a-box>
+        <a-sphere position="-.20 .24 .17" radius=".025" color="#00ff88"></a-sphere>
+        <a-sphere position="-.20 0 .17" radius=".025" color="#00ff88"></a-sphere>
+        <a-sphere position="-.20 -.24 .17" radius=".025" color="#00ff88"></a-sphere>
+      </a-entity>
+      <a-entity id="router-ar" visible="false" position=".52 -.05 .12">
+        <a-box width=".32" height=".08" depth=".22" color="#202a36"></a-box>
+        <a-cylinder position="-.10 .11 0" radius=".008" height=".22" color="#aab7c4"></a-cylinder>
+        <a-cylinder position=".10 .11 0" radius=".008" height=".22" color="#aab7c4"></a-cylinder>
+        <a-sphere position="0 .055 .10" radius=".018" color="#00ff88"></a-sphere>
+      </a-entity>
+      <a-text value="CENTRO DE DATOS\nSERVIDORES · ESTADO ACTIVO" position="0 .48 .08"
+        align="center" color="#00ff88" width="1.7"></a-text>
+      <a-plane position="0 -.57 .02" width="1.2" height=".22" color="#071b2a" opacity=".9"></a-plane>
+      <a-text value="ESPOCH · PROTOTIPO AR" position="0 -.59 .04"
+        align="center" color="#ffffff" width="1.2"></a-text>
+    </a-entity>
+  </a-scene>
+  <script>
+    const scene=document.querySelector('a-scene');
+    const status=document.getElementById('arStatus');
+    scene.addEventListener('arReady',()=>status.textContent='Cámara lista: busca la imagen objetivo.');
+    scene.addEventListener('arError',e=>status.textContent='No se pudo iniciar AR. Revisa HTTPS y permisos de cámara.');
+    scene.addEventListener('targetFound',()=>status.textContent='¡Marcador reconocido! Modelo visible.');
+    scene.addEventListener('targetLost',()=>status.textContent='Marcador fuera de vista; vuelve a apuntar.');
+    document.getElementById('toggleRouter').addEventListener('click',()=>{
+      const r=document.getElementById('router-ar');r.setAttribute('visible',!r.getAttribute('visible'));
+    });
+  </script>
+</body>
+</html>

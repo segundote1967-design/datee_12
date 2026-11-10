@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Centro de datos inmersivo VR - proyecto integrador ESPOCH">
+  <title>Centro de Datos Inmersivo VR | ESPOCH</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#07111d}
+    #hud{position:fixed;z-index:10;top:12px;left:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
+    #hud>*{pointer-events:auto}
+    .brand{background:#071b2aeb;color:#eafaff;border:1px solid #00d9ff;padding:10px 13px;border-radius:9px;font-size:13px}
+    .controls{display:flex;gap:6px;flex-wrap:wrap}
+    button,.link{border:1px solid #00cfea;background:#102b3d;color:#eafaff;padding:10px 12px;border-radius:8px;font-weight:600;cursor:pointer;text-decoration:none;font-size:13px}
+    button:hover,.link:hover{background:#07506a}
+    #help{position:fixed;z-index:10;bottom:12px;left:12px;max-width:340px;background:#071b2ae8;color:#d9f6ff;border:1px solid #31566a;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.5}
+    #status{color:#7fffd4}
+    #info{position:fixed;z-index:11;right:12px;top:82px;width:min(310px,calc(100vw - 24px));display:none;background:#071b2af2;border:1px solid #00d9ff;border-radius:12px;padding:16px;color:#eafaff;box-shadow:0 8px 30px #0009}
+    #info h2{margin:0 0 8px;color:#5fe9ff;font-size:18px}
+    #info p{margin:6px 0;font-size:14px;line-height:1.4}
+    #info button{margin-top:8px}
+    @media(max-width:600px){.brand{width:100%}#help{max-width:calc(100vw - 24px)}}
+  </style>
+</head>
+
+<body>
+
+  <div id="hud">
+    <div class="brand">
+      <strong>ESPOCH · CENTRO DE DATOS</strong><br>
+      Experiencia inmersiva VR · Grupo 1
+    </div>
+    <div class="controls">
+      <button id="showHelp">Ayuda</button>
+      <button id="resetView">Reiniciar vista</button>
+      <a class="link" href="ar.html">Abrir experiencia AR</a>
+    </div>
+  </div>
+
+  <aside id="info" aria-live="polite">
+    <h2 id="infoTitle">Información del rack</h2>
+    <p id="infoFunction"></p>
+    <p id="infoState"></p>
+    <p id="infoExtra"></p>
+    <button id="closeInfo">Cerrar</button>
+  </aside>
+
+  <div id="help">
+    <strong>Cómo recorrer la sala</strong><br>
+    PC: mouse para mirar; W/A/S/D o flechas para moverse.
+    Haz clic en el frente de un rack para ver su información.<br>
+    <span id="status">Estado de la simulación: cargando…</span>
+  </div>
+
+  <a-scene background="color: #0b0d12"
+    renderer="colorManagement: true; physicallyCorrectLights: true"
+    vr-mode-ui="enabled: true"
+    loading-screen="dotsColor: #00e5ff; backgroundColor: #07111d">
+
+    <!-- ILUMINACIÓN -->
+    <a-light type="ambient" color="#8da9bd" intensity="0.75"></a-light>
+    <a-light type="point" color="#d8f7ff" intensity="1.2" distance="14" position="0 3.1 -3"></a-light>
+    <a-light type="point" color="#d8f7ff" intensity="1.0" distance="14" position="0 3.1 -7"></a-light>
+
+    <a-light type="point" color="#ff2222" intensity="0.8" distance="4" position="1.3 2.2 -3"
+      animation="property: intensity; from: 0.15; to: 1.3; dir: alternate; dur: 650; loop: true">
+    </a-light>
+
+    <!-- ARQUITECTURA: SALA 8 X 12 METROS -->
+    <a-plane position="0 3.5 -4" rotation="90 0 0" width="8" height="12" color="#18232d"></a-plane>
+
+    <a-box position="0 1.75 -10" width="8" height="3.5" depth=".12" color="#24384b"></a-box>
+    <a-box position="-4 1.75 -4" rotation="0 90 0" width="12" height="3.5" depth=".12" color="#24384b"></a-box>
+    <a-box position="4 1.75 -4" rotation="0 90 0" width="12" height="3.5" depth=".12" color="#24384b"></a-box>
+
+    <!-- PARED DE ENTRADA -->
+    <a-box position="-2.6 1.75 2" width="2.8" height="3.5" depth=".12" color="#24384b"></a-box>
+    <a-box position="2.6 1.75 2" width="2.8" height="3.5" depth=".12" color="#24384b"></a-box>
+    <a-box position="0 3.0 2" width="2.4" height="1" depth=".12" color="#24384b"></a-box>
+
+    <a-plane position="0 0 -4" rotation="-90 0 0" width="8" height="12" color="#415b70"></a-plane>
+
+    <!-- CUADRÍCULA DEL PISO -->
+    <a-entity id="floor-grid">
+      <a-box position="-3 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="-2 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="-1 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="0 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="1 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="2 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+      <a-box position="3 .008 -4" width=".015" height=".012" depth="12" color="#9aabba"></a-box>
+
+      <a-box position="0 .008 1" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 0" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -1" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -2" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -3" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -4" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -5" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -6" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -7" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -8" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+      <a-box position="0 .008 -9" width="8" height=".012" depth=".015" color="#9aabba"></a-box>
+    </a-entity>
+
+    <!-- PUERTA Y SEÑALIZACIÓN -->
+    <a-box position="0 1 1.88" width="1.2" height="2" depth=".05" color="#8a5a2b"></a-box>
+    <a-sphere position=".45 1 1.81" radius=".05" color="#f5c542"></a-sphere>
+
+    <a-text value="ACCESO AL CENTRO DE DATOS · GRUPO 1"
+      position="0 2.35 1.78" rotation="0 180 0"
+      align="center" width="4" color="#ffffff"></a-text>
+
+    <a-text value="SALIDA  →" position="0 .035 .65"
+      rotation="-90 0 0" align="center" width="2.5" color="#ffe166"></a-text>
+
+    <!-- SISTEMA DE CLIMATIZACIÓN CRAC -->
+    <a-entity id="crac" position="-3.1 0 -9">
+      <a-box position="0 1.1 0" width="1.3" height="2.2" depth=".9" color="#9aa3b5"></a-box>
+      <a-box position="0 1.65 .46" width="1" height=".4" depth=".02" color="#263849"></a-box>
+
+      <a-text value="CRAC · 18.5 °C" position="0 1.65 .48"
+        align="center" width="1.8" color="#00e5ff"></a-text>
+
+      <a-box position="0 .7 .46" width="1.1" height=".9" depth=".02" color="#526272"></a-box>
+      <a-box position="0 .9 .475" width="1.05" height=".02" depth=".01" color="#1a232a"></a-box>
+      <a-box position="0 .7 .475" width="1.05" height=".02" depth=".01" color="#1a232a"></a-box>
+      <a-box position="0 .5 .475" width="1.05" height=".02" depth=".01" color="#1a232a"></a-box>
+    </a-entity>
+
+    <!-- RACKS: DOS FILAS DE CUATRO -->
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 01; funcion: Servidor web principal; estado: ACTIVO; detalle: Servicio de alojamiento web"
+      position="-1.6 0 -1" rotation="0 90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 02; funcion: Base de datos (cluster); estado: ACTIVO; detalle: Almacenamiento estructurado"
+      position="-1.6 0 -3" rotation="0 90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 03; funcion: Almacenamiento NAS/SAN; estado: ACTIVO; detalle: Almacenamiento compartido"
+      position="-1.6 0 -5" rotation="0 90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 04; funcion: Virtualización; estado: ACTIVO; detalle: Máquinas virtuales y servicios"
+      position="-1.6 0 -7" rotation="0 90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 05; funcion: Routers y firewalls; estado: ACTIVO; detalle: Conectividad y seguridad"
+      position="1.6 0 -1" rotation="0 -90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: falla"
+      info-rack="titulo: RACK 06 · ALERTA; funcion: Servidor de monitoreo; estado: FALLA CRÍTICA; detalle: Falla simulada en fuente de poder U4"
+      position="1.6 0 -3" rotation="0 -90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 07; funcion: Respaldos y backup; estado: ACTIVO; detalle: Copias de seguridad"
+      position="1.6 0 -5" rotation="0 -90 0"></a-entity>
+
+    <a-entity class="rack-item" rack="unidades: 8; estado: ok"
+      info-rack="titulo: RACK 08; funcion: Servicios cloud y proxy; estado: ACTIVO; detalle: Servicios de acceso y proxy"
+      position="1.6 0 -7" rotation="0 -90 0"></a-entity>
+
+    <!-- ROTULACIÓN DE LOS RACKS -->
+    <a-text value="RACK 01" position="-1.1 2.38 -1" rotation="0 90 0" align="center" width="2" color="#00e5ff"></a-text>
+    <a-text value="RACK 02" position="-1.1 2.38 -3" rotation="0 90 0" align="center" width="2" color="#00e5ff"></a-text>
+    <a-text value="RACK 03" position="-1.1 2.38 -5" rotation="0 90 0" align="center" width="2" color="#00e5ff"></a-text>
+    <a-text value="RACK 04" position="-1.1 2.38 -7" rotation="0 90 0" align="center" width="2" color="#00e5ff"></a-text>
+
+    <a-text value="RACK 05" position="1.1 2.38 -1" rotation="0 -90 0" align="center" width="2" color="#00e5ff"></a-text>
+    <a-text value="RACK 06 · FALLA" position="1.1 2.38 -3" rotation="0 -90 0" align="center" width="2.2" color="#ff5555"></a-text>
+    <a-text value="RACK 07" position="1.1 2.38 -5" rotation="0 -90 0" align="center" width="2" color="#00e5ff"></a-text>
+    <a-text value="RACK 08" position="1.1 2.38 -7" rotation="0 -90 0" align="center" width="2" color="#00e5ff"></a-text>
+
+    <a-plane position="0 3.08 -4" width="2.8" height=".48" color="#0b192c"></a-plane>
+    <a-text value="PASILLO FRÍO CENTRAL" position="0 3.08 -3.98"
+      align="center" width="3" color="#5fe9ff"></a-text>
+
+    <!-- PANEL DE SUPERVISIÓN -->
+    <!-- Valores demostrativos, no son sensores reales -->
+    <a-entity position="3.86 1.8 -4" rotation="0 -90 0">
+      <a-plane width="3.2" height="1.8" color="#08121e"></a-plane>
+      <a-plane width="3.26" height="1.86" position="0 0 -.006" color="#00bcd4"></a-plane>
+
+      <a-text value="SUPERVISIÓN · SIMULACIÓN
+
+Temperatura: 19.2 °C
+Humedad: 42 %
+Climatización CRAC: NORMAL
+Racks operativos: 7 / 8
+
+ALERTA:
+RACK 06 · FALLA EN FUENTE U4"
+        position="0 0 .012" align="center" width="2.85" color="#ffffff"></a-text>
+    </a-entity>
+
+    <!-- CÁMARA Y SELECCIÓN -->
+    <a-camera id="camera" position="0 1.6 .8"
+      look-controls="pointerLockEnabled: false"
+      wasd-controls="acceleration: 18" near=".05">
+
+      <a-cursor raycaster="objects: .interactivo" fuse="false" color="#5fe9ff"
+        geometry="primitive: ring; radiusInner: .008; radiusOuter: .014">
+      </a-cursor>
+    </a-camera>
+
+  </a-scene>
+
+  <script>
+    // COMPONENTE QUE CONSTRUYE LOS RACKS
+    AFRAME.registerComponent('rack', {
+      schema: {
+        unidades: {type:'int', default:8},
+        estado: {type:'string', default:'ok'}
+      },
+
+      init: function () {
+        const el=this.el;
+        const total=Math.max(1,this.data.unidades);
+        const step=2/total;
+
+        const box=(pos,w,h,d,color,material)=>{
+          const o=document.createElement('a-box');
+          o.setAttribute('position',pos);
+          o.setAttribute('width',w);
+          o.setAttribute('height',h);
+          o.setAttribute('depth',d);
+
+          if(material) o.setAttribute('material',material);
+          else o.setAttribute('color',color);
+
+          el.appendChild(o);
+          return o;
+        };
+
+        box('0 1.1 0',.8,2.2,1,'#12161a',
+          'metalness: .75; roughness: .25');
+
+        box('0 1.1 .51',.74,2.1,.012,null,
+          'color: #88c0d0; opacity: .18; transparent: true; side: double');
+
+        for(let i=0;i<total;i++){
+          const y=.2+i*step;
+          const failed=this.data.estado==='falla'&&(i===3||i===4);
+
+          box(`0 ${y} .05`,.72,step*.82,.9,'#2e3440');
+          box(`0 ${y} .505`,.70,step*.72,.012,'#1a1c23');
+
+          const led=document.createElement('a-sphere');
+          led.setAttribute('position',`-.28 ${y} .52`);
+          led.setAttribute('radius','.022');
+          led.setAttribute('color',failed?'#ff2200':'#00ff66');
+
+          if(failed){
+            led.setAttribute('animation',
+              'property: material.color; from: #ff2200; to: #440000; dir: alternate; dur: 450; loop: true');
+          }
+
+          el.appendChild(led);
+
+          for(let d=-.15;d<=.25;d+=.1){
+            box(`${d.toFixed(2)} ${y} .516`,.075,step*.48,.008,'#4c566a');
+          }
+        }
+
+        // ÁREA INVISIBLE PARA DETECTAR LOS CLICS
+        const hit=document.createElement('a-box');
+        hit.setAttribute('position','0 1.1 .64');
+        hit.setAttribute('width','.86');
+        hit.setAttribute('height','2.2');
+        hit.setAttribute('depth','.22');
+        hit.setAttribute('material','opacity: 0; transparent: true');
+        hit.classList.add('interactivo');
+        el.appendChild(hit);
+      }
+    });
+
+    // COMPONENTE DE INFORMACIÓN DE CADA RACK
+    AFRAME.registerComponent('info-rack', {
+      schema: {
+        titulo:{type:'string',default:'RACK'},
+        funcion:{type:'string',default:'Sin descripción'},
+        estado:{type:'string',default:'ACTIVO'},
+        detalle:{type:'string',default:''}
+      },
+
+      init:function(){
+        const el=this.el;
+        const d=this.data;
+
+        el.addEventListener('click',()=>{
+          document.getElementById('infoTitle').textContent=d.titulo;
+          document.getElementById('infoFunction').textContent='Función: '+d.funcion;
+          document.getElementById('infoState').textContent='Estado: '+d.estado;
+          document.getElementById('infoExtra').textContent=d.detalle;
+          document.getElementById('info').style.display='block';
+
+          // SONIDO DE AVISO
+          try{
+            const C=window.AudioContext||window.webkitAudioContext;
+
+            if(C){
+              const ctx=new C();
+              const osc=ctx.createOscillator();
+              const gain=ctx.createGain();
+
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+
+              osc.frequency.value=d.estado.includes('FALLA')?220:660;
+              gain.gain.setValueAtTime(.06,ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.16);
+
+              osc.start();
+              osc.stop(ctx.currentTime+.17);
+              osc.onended=()=>ctx.close();
+            }
+          }catch(e){}
+        });
+      }
+    });
+
+    // BOTÓN CERRAR INFORMACIÓN
+    document.getElementById('closeInfo').addEventListener('click',()=>{
+      document.getElementById('info').style.display='none';
+    });
+
+    // BOTÓN REINICIAR VISTA
+    document.getElementById('resetView').addEventListener('click',()=>{
+      const c=document.getElementById('camera');
+      c.setAttribute('position','0 1.6 .8');
+      c.setAttribute('rotation','0 0 0');
+    });
+
+    // BOTÓN AYUDA
+    document.getElementById('showHelp').addEventListener('click',()=>{
+      const h=document.getElementById('help');
+      h.style.display=h.style.display==='none'?'block':'none';
+    });
+
+    // ESTADO DE LA SIMULACIÓN
+    document.querySelector('a-scene').addEventListener('loaded',()=>{
+      document.getElementById('status').textContent=
+        'Estado de la simulación: lista · 8 racks · 1 alerta simulada';
+    });
+  </script>
+
+</body>
+</html>
